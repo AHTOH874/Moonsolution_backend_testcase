@@ -1,0 +1,43 @@
+version: '3'
+services:
+  db:
+    image: postgres:latest
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: junback
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - database_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    ports:
+      - "9000:8000"
+    volumes:
+      - ./app/.:/app
+    links:
+      - db
+
+  redis:
+    image: redis:4.0-alpine
+    command:
+      - 'redis-server'
+      - '--loglevel warning'
+      - '--databases 2'
+      - '--save 900 1'
+      - '--save 300 10'
+      - '--save 60 10000'
+      - '--maxmemory 50mb'
+      - '--maxmemory-policy noeviction'
+      - '--requirepass REDIS_PASSWORD'
+    volumes:
+      - ./redis/.:/data
+    ports:
+      - "6379:6379"
+
+volumes:
+  database_data:
+    driver: local
